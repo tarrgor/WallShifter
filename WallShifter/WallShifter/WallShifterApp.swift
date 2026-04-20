@@ -60,15 +60,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let changeOnLaunch = configStore.config.schedule.changeOnLaunch
         engine.start(changeOnLaunch: changeOnLaunch)
 
-        // 6. Register for wake-from-sleep notifications if needed
-        if configStore.config.schedule.changeOnWake {
-            NSWorkspace.shared.notificationCenter.addObserver(
-                self,
-                selector: #selector(handleWake),
-                name: NSWorkspace.didWakeNotification,
-                object: nil
-            )
-        }
+        // 6. Always register for wake-from-sleep; the handler checks the live setting.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -95,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Wake notification
 
     @objc private func handleWake() {
+        guard configStore.config.schedule.changeOnWake else { return }
         wallpaperEngine?.next()
     }
 }
