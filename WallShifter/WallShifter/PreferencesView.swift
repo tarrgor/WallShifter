@@ -278,7 +278,9 @@ struct AdvancedTab: View {
             if transitionStyle != newValue { transitionStyle = newValue }
         }
         .onChange(of: transitionStyle) { _, newValue in
-            configStore.config.advanced.transition = newValue
+            if configStore.config.advanced.transition != newValue {
+                configStore.config.advanced.transition = newValue
+            }
         }
     }
 }

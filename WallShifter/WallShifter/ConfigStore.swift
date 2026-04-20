@@ -53,10 +53,9 @@ final class ConfigStore: ObservableObject {
         }
     }
 
-    /// Cancels any pending debounced save and immediately persists the current config.
+    /// Immediately persists the current config, bypassing the debounce delay.
     /// Call from `applicationWillTerminate` to ensure in-flight changes are not lost.
     func saveNow() {
-        saveCancellable?.cancel()
         let snapshot = config
         saveQueue.sync { self.persist(snapshot) }
     }
