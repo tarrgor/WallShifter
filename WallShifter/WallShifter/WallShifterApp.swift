@@ -70,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        configStore.saveNow()
         systemWallpaperStore?.restore()
     }
 
