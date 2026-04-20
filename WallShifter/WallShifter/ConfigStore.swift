@@ -8,15 +8,15 @@ import Combine
 /// under the key `"bookmark.<sourceID>"`.
 final class ConfigStore: ObservableObject {
 
-    @Published var config: AppConfig {
-        didSet { saveConfig() }
-    }
+    @Published var config: AppConfig
 
     // MARK: - Private
 
     private let configURL: URL
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private let saveQueue = DispatchQueue(label: "com.wallshifter.config-save", qos: .utility)
+    private var saveCancellable: AnyCancellable?
 
     // MARK: - Init
 
@@ -35,17 +35,29 @@ final class ConfigStore: ObservableObject {
         } else {
             config = AppConfig()
         }
+
+        saveCancellable = $config
+            .dropFirst()
+            .debounce(for: .milliseconds(500), scheduler: saveQueue)
+            .sink { [weak self] snapshot in self?.persist(snapshot) }
     }
 
     // MARK: - Config persistence
 
-    private func saveConfig() {
+    private func persist(_ config: AppConfig) {
         do {
             let data = try encoder.encode(config)
             try data.write(to: configURL, options: .atomic)
         } catch {
             print("[ConfigStore] Failed to save config: \(error)")
         }
+    }
+
+    /// Immediately persists the current config, bypassing the debounce delay.
+    /// Call from `applicationWillTerminate` to ensure in-flight changes are not lost.
+    func saveNow() {
+        let snapshot = config
+        saveQueue.sync { self.persist(snapshot) }
     }
 
     private static func load(from url: URL, decoder: JSONDecoder) -> AppConfig? {

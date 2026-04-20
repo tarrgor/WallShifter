@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 // MARK: - Root
 
@@ -234,6 +235,7 @@ struct DisplaysTab: View {
 struct AdvancedTab: View {
     @EnvironmentObject private var configStore: ConfigStore
     @State private var loginItemEnabled: Bool = false
+    @State private var transitionStyle: TransitionStyle = .instant
 
     var body: some View {
         Form {
@@ -255,7 +257,7 @@ struct AdvancedTab: View {
             }
 
             Section("Transition") {
-                Picker("Style", selection: $configStore.config.advanced.transition) {
+                Picker("Style", selection: $transitionStyle) {
                     Text("Instant").tag(TransitionStyle.instant)
                     Text("Fade").tag(TransitionStyle.fade)
                 }
@@ -269,6 +271,15 @@ struct AdvancedTab: View {
                 loginItemEnabled = LoginItemManager.shared.isEnabled
             } else {
                 loginItemEnabled = configStore.config.advanced.launchAtLogin
+            }
+            transitionStyle = configStore.config.advanced.transition
+        }
+        .onReceive(configStore.$config.map(\.advanced.transition).removeDuplicates()) { newValue in
+            if transitionStyle != newValue { transitionStyle = newValue }
+        }
+        .onChange(of: transitionStyle) { _, newValue in
+            if configStore.config.advanced.transition != newValue {
+                configStore.config.advanced.transition = newValue
             }
         }
     }
