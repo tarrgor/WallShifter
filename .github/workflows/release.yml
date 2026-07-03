@@ -83,9 +83,13 @@ jobs:
 
       - name: Create DMG
         run: |
+          STAGING="$RUNNER_TEMP/dmg-staging"
+          mkdir -p "$STAGING"
+          cp -r "$RUNNER_TEMP/export/WallShifter.app" "$STAGING/"
+          ln -s /Applications "$STAGING/Applications"
           hdiutil create \
             -volname WallShifter \
-            -srcfolder "$RUNNER_TEMP/export/WallShifter.app" \
+            -srcfolder "$STAGING" \
             -ov -format UDZO \
             "$RUNNER_TEMP/WallShifter-$VERSION.dmg"
 
